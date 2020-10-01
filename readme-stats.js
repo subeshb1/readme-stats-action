@@ -74,3 +74,21 @@ githubQuery(
   .then(console.log)
   .then(() => console.log(data))
   .catch(console.error)
+
+
+
+const githubAPIQuery = async (query) => fetch(query, {
+  method: 'GET',
+  headers: {
+    Authorization: `bearer ${token}`
+  }
+})
+
+
+githubQuery(
+  statsQuery
+).then(res => res.json())
+  .then(res => data = res.data.viewer || res.data.viewer)
+  .then(console.log)
+  .then(() => console.log(data))
+  .catch(console.error)
