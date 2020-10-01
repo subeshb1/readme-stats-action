@@ -1,6 +1,7 @@
-const fetch = require('node-fetch');
-
 require('dotenv').config()
+const fetch = require('node-fetch');
+const token = process.env.GITHUB_TOKEN
+const apiUrl = process.env.GITHUB_GRAPHQL_URL
 
 const defaultConfig = {
   followersCount: true,
@@ -31,10 +32,7 @@ let data = {
 
 }
 
-
-const token = process.env.GITHUB_TOKEN
-const apiUrl = process.env.GITHUB_TOKEN
-const githubQuery = async (query) => fetch('https://api.github.com/graphql', {
+const githubQuery = async (query) => fetch(apiUrl, {
   method: 'POST',
   headers: {
     Authorization: `bearer ${token}`
@@ -72,7 +70,7 @@ const statsQuery = `
 githubQuery(
   statsQuery
 ).then(res => res.json())
-  .then(JSON.stringify).then(res => data = res || res)
+  .then(res => data = res.data.viewer || res.data.viewer)
   .then(console.log)
   .then(() => console.log(data))
   .catch(console.error)
