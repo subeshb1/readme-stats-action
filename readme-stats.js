@@ -56,6 +56,14 @@ const githubAPIQuery = async (query) => fetch(query, {
 })
 
 
+const extractGraphqlJson = res => {
+  return res.json().then(res => {
+    if (res.errors && res.errors.length) {
+      throw res
+    }
+    return res
+  })
+}
 
 const statsQuery = `
 {
@@ -94,21 +102,18 @@ const extractCountStats = (res) => {
   const data = res.data.viewer;
   return {
     repositoryCount: data.repositories.totalCount,
-    contributionCount: data.repositoriesContributedTo.totalCount,
+    repoContributedCount: data.repositoriesContributedTo.totalCount,
     contributionYears: data.contributionsCollection.contributionYears,
     followersCount: data.followers.totalCount,
     issuesCount: data.issues.totalCount,
     pullRequestsCount: data.pullRequests.totalCount,
+    firstContribution: data.contributionsCollection.contributionYears.slice(-1)[0]
   }
 }
 
-
-const fetchCompoundStats = (countStats) => {
+const fetchContributionPerYear = (yearArray) => {
   let queryArray = []
-  queryArray = queryArray.concat(countStats.contributionYears.map(contributionPerYearQuery))
-
-  queryArray = queryArray.concat(countStats.contributionYears.map(contributionPerYearQuery))
-
+  queryArray = queryArray.concat(yearArray.map(contributionPerYearQuery))
   const query = `
   {
     viewer {
@@ -116,14 +121,70 @@ const fetchCompoundStats = (countStats) => {
     }
   }
   `
-  return githubQuery(query).then(res => res.json()).then(res => res.data.viewer)
+  return githubQuery(query).then(extractGraphqlJson).then(res => res.data.viewer)
+}
 
+
+const fetchRepoLanguage = (externalRepo = false) => {
+  const schemaKey = externalRepo ? 'repositoriesContributedTo' : 'repositories';
+  const forkKey = externalRepo ? '' : 'isFork: false,';
+  let repoLanguages = [];
+  let hasNext = null
+  let cursor
+  function fetchPerPage() {
+    if (hasNext === false) {
+      return true
+    }
+    const query = `
+    {
+      viewer {
+        ${schemaKey}(${forkKey} ${config.includePrivate ? '' : 'privacy: PUBLIC'}, first: 100 ${hasNext ? `,after: "${cursor}"` : ''}) {
+          pageInfo{
+            endCursor
+            hasNextPage
+          }
+          nodes {
+            name
+            languages(first: 100) {
+              nodes {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+    `
+    return githubQuery(query)
+      .then(extractGraphqlJson)
+      .then(res => console.log(res) || res)
+      .then(res => res.data.viewer)
+      .then(data => {
+        cursor = data[schemaKey].pageInfo.endCursor
+        hasNext = data[schemaKey].pageInfo.hasNextPage
+        repoLanguages = repoLanguages.concat(data[schemaKey].nodes.languages)
+        return fetchPerPage()
+      });
+  }
+
+  return fetchPerPage().then(() => repoLanguages)
+
+}
+const fetchCompoundStats = (countStats) => {
+  return Promise.all([
+    fetchContributionPerYear(countStats.contributionYears),
+    fetchRepoLanguage(),
+    fetchRepoLanguage(true)
+  ])
+    .then(responses => {
+      return responses[0]
+    })
 }
 
 
 githubQuery(
   statsQuery
-).then(res => res.json())
+).then(extractGraphqlJson)
   .then(extractCountStats)
   .then(fetchCompoundStats)
   .then(console.log)
