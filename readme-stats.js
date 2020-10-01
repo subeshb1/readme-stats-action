@@ -22,7 +22,7 @@ const config = {
   contributionCount: true,
   currentYearContributionCount: true,
   repositoryCount: true,
-  includePrivate: false,
+  includePrivate: true,
   repositoryContributedCount: true,
   languageCount: true,
 }
@@ -177,7 +177,15 @@ const fetchCompoundStats = (countStats) => {
     fetchRepoLanguage(true)
   ])
     .then(responses => {
-      return responses[0]
+      const contributionPerYear = Object.entries(responses[0]).reduce((acc, item) => {
+        acc[item[0].replace('year', '')] = item[1].contributionCalendar.totalContributions
+        return acc
+      }, {})
+      return {
+        ...countStats,
+        contributionPerYear
+
+      }
     })
 }
 
