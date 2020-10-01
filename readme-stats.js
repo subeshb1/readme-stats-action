@@ -125,7 +125,7 @@ const fetchContributionPerYear = (yearArray) => {
 }
 
 
-const fetchRepoLanguage = (externalRepo = false) => {
+const fetchRepoLanguageAndStars = (externalRepo = false) => {
   const schemaKey = externalRepo ? 'repositoriesContributedTo' : 'repositories';
   const forkKey = externalRepo ? '' : 'isFork: false,';
   let repoLanguages = [];
@@ -174,8 +174,8 @@ const fetchRepoLanguage = (externalRepo = false) => {
 const fetchCompoundStats = (countStats) => {
   return Promise.all([
     fetchContributionPerYear(countStats.contributionYears),
-    fetchRepoLanguage(),
-    fetchRepoLanguage(true)
+    fetchRepoLanguageAndStars(),
+    fetchRepoLanguageAndStars(true)
   ])
     .then(responses => {
       const contributionPerYear = Object.entries(responses[0]).reduce((acc, item) => {
