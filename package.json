@@ -1,0 +1,23 @@
+{
+  "name": "readme-stats-action",
+  "version": "1.0.0",
+  "description": "Generate readme stats",
+  "main": "readme-stats.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/subeshb1/readme-stats-action.git"
+  },
+  "keywords": [
+    "readme",
+    "stats"
+  ],
+  "author": "subeshb1",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/subeshb1/readme-stats-action/issues"
+  },
+  "homepage": "https://github.com/subeshb1/readme-stats-action#readme"
+}
