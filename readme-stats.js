@@ -131,6 +131,7 @@ const fetchRepoLanguage = (externalRepo = false) => {
   let repoLanguages = [];
   let hasNext = null
   let cursor
+  let stargazerCount = 0
   function fetchPerPage() {
     if (hasNext === false) {
       return true
@@ -144,7 +145,7 @@ const fetchRepoLanguage = (externalRepo = false) => {
             hasNextPage
           }
           nodes {
-            name
+            stargazerCount
             languages(first: 100) {
               nodes {
                 name
@@ -162,11 +163,12 @@ const fetchRepoLanguage = (externalRepo = false) => {
         cursor = data[schemaKey].pageInfo.endCursor
         hasNext = data[schemaKey].pageInfo.hasNextPage
         repoLanguages = repoLanguages.concat(data[schemaKey].nodes.flatMap(node => node.languages.nodes.map(language => language.name)))
+        stargazerCount += data[schemaKey].nodes.reduce((acc, item) => acc + item.stargazerCount, 0)
         return fetchPerPage()
       });
   }
 
-  return fetchPerPage().then(() => repoLanguages)
+  return fetchPerPage().then(() => ({ repoLanguages, stargazerCount }))
 
 }
 const fetchCompoundStats = (countStats) => {
@@ -181,7 +183,7 @@ const fetchCompoundStats = (countStats) => {
         return acc
       }, {});
 
-      const languages = responses[1].concat(responses[2]).reduce((acc, item) => {
+      const languages = responses[1].repoLanguages.concat(responses[2].repoLanguages).reduce((acc, item) => {
         if (acc[item]) {
           acc[item]++
         } else {
@@ -194,7 +196,8 @@ const fetchCompoundStats = (countStats) => {
         ...countStats,
         contributionPerYear,
         languages,
-        languageCount: Object.keys(languages).length
+        languageCount: Object.keys(languages).length,
+        stargazerCount: responses[1].stargazerCount
       }
     })
 }
