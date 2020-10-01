@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/subeshb1/readme-stats-action/issues"
   },
-  "homepage": "https://github.com/subeshb1/readme-stats-action#readme"
+  "homepage": "https://github.com/subeshb1/readme-stats-action#readme",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
 }
