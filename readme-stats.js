@@ -157,12 +157,11 @@ const fetchRepoLanguage = (externalRepo = false) => {
     `
     return githubQuery(query)
       .then(extractGraphqlJson)
-      .then(res => console.log(res) || res)
       .then(res => res.data.viewer)
       .then(data => {
         cursor = data[schemaKey].pageInfo.endCursor
         hasNext = data[schemaKey].pageInfo.hasNextPage
-        repoLanguages = repoLanguages.concat(data[schemaKey].nodes.languages)
+        repoLanguages = repoLanguages.concat(data[schemaKey].nodes.flatMap(node => node.languages.nodes.map(language => language.name)))
         return fetchPerPage()
       });
   }
@@ -180,11 +179,22 @@ const fetchCompoundStats = (countStats) => {
       const contributionPerYear = Object.entries(responses[0]).reduce((acc, item) => {
         acc[item[0].replace('year', '')] = item[1].contributionCalendar.totalContributions
         return acc
+      }, {});
+
+      const languages = responses[1].concat(responses[2]).reduce((acc, item) => {
+        if (acc[item]) {
+          acc[item]++
+        } else {
+          acc[item] = 1
+        }
+        return acc
       }, {})
+
       return {
         ...countStats,
-        contributionPerYear
-
+        contributionPerYear,
+        languages,
+        languageCount: Object.keys(languages).length
       }
     })
 }
