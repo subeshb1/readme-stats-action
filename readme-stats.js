@@ -171,37 +171,32 @@ const fetchRepoLanguageAndStars = (externalRepo = false) => {
   return fetchPerPage().then(() => ({ repoLanguages, stargazerCount }))
 
 }
-const fetchCompoundStats = (countStats) => {
-  return Promise.all([
+const fetchCompoundStats = async (countStats) => {
+  const responses = await Promise.all([
     fetchContributionPerYear(countStats.contributionYears),
     fetchRepoLanguageAndStars(),
     fetchRepoLanguageAndStars(true)
-  ])
-    .then(responses => {
-      const contributionPerYear = Object.entries(responses[0]).reduce((acc, item) => {
-        acc[item[0].replace('year', '')] = item[1].contributionCalendar.totalContributions
-        return acc
-      }, {});
-
-      const languages = responses[1].repoLanguages.concat(responses[2].repoLanguages).reduce((acc, item) => {
-        if (acc[item]) {
-          acc[item]++
-        } else {
-          acc[item] = 1
-        }
-        return acc
-      }, {})
-
-      return {
-        ...countStats,
-        contributionPerYear,
-        languages,
-        languageCount: Object.keys(languages).length,
-        stargazerCount: responses[1].stargazerCount
-      }
-    })
+  ]);
+  const contributionPerYear = Object.entries(responses[0]).reduce((acc, item) => {
+    acc[item[0].replace('year', '')] = item[1].contributionCalendar.totalContributions;
+    return acc;
+  }, {});
+  const languages = responses[1].repoLanguages.concat(responses[2].repoLanguages).reduce((acc_1, item_1) => {
+    if (acc_1[item_1]) {
+      acc_1[item_1]++;
+    } else {
+      acc_1[item_1] = 1;
+    }
+    return acc_1;
+  }, {});
+  return {
+    ...countStats,
+    contributionPerYear,
+    languages,
+    languageCount: Object.keys(languages).length,
+    stargazerCount: responses[1].stargazerCount
+  };
 }
-
 
 githubQuery(
   statsQuery
