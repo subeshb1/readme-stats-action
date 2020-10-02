@@ -181,13 +181,13 @@ const fetchCompoundStats = async (countStats) => {
     acc[item[0].replace('year', '')] = item[1].contributionCalendar.totalContributions;
     return acc;
   }, {});
-  const languages = responses[1].repoLanguages.concat(responses[2].repoLanguages).reduce((acc_1, item_1) => {
-    if (acc_1[item_1]) {
-      acc_1[item_1]++;
+  const languages = responses[1].repoLanguages.concat(responses[2].repoLanguages).reduce((acc, language) => {
+    if (acc[language]) {
+      acc[language]++;
     } else {
-      acc_1[item_1] = 1;
+      acc[language] = 1;
     }
-    return acc_1;
+    return acc;
   }, {});
   return {
     ...countStats,
