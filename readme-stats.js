@@ -13,23 +13,13 @@ const defaultConfig = {
   countPrivate: true,
   repositoryContributedCount: true,
   languageCount: true,
+  includeContributedRepoLanguage: true,
+  includePrivate: true,
+  excludedLanguages: [].map(str=>str.toLocaleLowerCase())
 }
 
 const config = {
-  followersCount: true,
-  issuesCount: true,
-  pullRequestCount: true,
-  contributionCount: true,
-  currentYearContributionCount: true,
-  repositoryCount: true,
-  includePrivate: true,
-  repositoryContributedCount: true,
-  languageCount: true,
-}
-
-
-let data = {
-
+  ...defaultConfig
 }
 
 /**
@@ -111,7 +101,7 @@ const extractCountStats = (res) => {
   }
 }
 
-const fetchContributionPerYear = (yearArray) => {
+const fetchContributionPerYear = async (yearArray) => {
   let queryArray = []
   queryArray = queryArray.concat(yearArray.map(contributionPerYearQuery))
   const query = `
@@ -121,11 +111,16 @@ const fetchContributionPerYear = (yearArray) => {
     }
   }
   `
-  return githubQuery(query).then(extractGraphqlJson).then(res => res.data.viewer)
+  const res = await githubQuery(query);
+  const res_1 = await extractGraphqlJson(res);
+  return res_1.data.viewer;
 }
 
 
 const fetchRepoLanguageAndStars = (externalRepo = false) => {
+  if (externalRepo && !config.includeContributedRepoLanguage) {
+    return { repoLanguages: [], stargazerCount: 0 }
+  }
   const schemaKey = externalRepo ? 'repositoriesContributedTo' : 'repositories';
   const forkKey = externalRepo ? '' : 'isFork: false,';
   let repoLanguages = [];
@@ -182,6 +177,9 @@ const fetchCompoundStats = async (countStats) => {
     return acc;
   }, {});
   const languages = responses[1].repoLanguages.concat(responses[2].repoLanguages).reduce((acc, language) => {
+    if(config.excludedLanguages.includes(language.toLocaleLowerCase())) {
+      return acc
+    }
     if (acc[language]) {
       acc[language]++;
     } else {
